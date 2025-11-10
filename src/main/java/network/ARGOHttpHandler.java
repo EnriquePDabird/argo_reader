@@ -13,12 +13,13 @@ import org.jsoup.select.Elements;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-public class ARGOHttpRequest {
+
+public class ARGOHttpHandler {
     private final HttpClient defaultClient;
     private final String urlAtlanticOcean2025 = "https://data-argo.ifremer.fr/geo/atlantic_ocean/2025/";
     private final Path downloadDir = Paths.get("src/main/java/resources");
 
-    public ARGOHttpRequest(){
+    public ARGOHttpHandler(){
         this.defaultClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_2)
             .connectTimeout(Duration.ofSeconds(10))
@@ -27,14 +28,7 @@ public class ARGOHttpRequest {
 
     // Crea las carpetas donde se almacenarán los archivos NetCDF
     private void createFolders(){
-        String htmlBody = getHTMLContent(urlAtlanticOcean2025);
-        if(htmlBody == null){
-            System.err.println("No se pudo obtener el contenido de la URL base");
-        }
-
-        Document doc = Jsoup.parse(htmlBody, urlAtlanticOcean2025);
-        Elements monthLinks = doc.select("a[href~=^\\d{2}/$]");
-
+        Elements monthLinks = parseMainDirectory();
         System.out.println(monthLinks.size());
         for(Element monthLink : monthLinks){
             String monthHref = monthLink.attr("href");
@@ -51,8 +45,28 @@ public class ARGOHttpRequest {
         }
     }
 
-    // Devuelve el cuerpo de la petición HTML
-    private  String getHTMLContent(String url){
+    // Descarga y almacena los datos .nc en la carpeta correspondiente según su mes
+    private void ncdfDownloader(){
+        Elements monthLinks = parseMainDirectory();
+        for(Element monthLink : monthLinks){
+            String monthFullURL = urlAtlanticOcean2025 + monthLink.attr("href");
+
+        }
+    }
+
+    private Elements parseMainDirectory(){
+        String htmlBody = getHTMLContent(urlAtlanticOcean2025);
+        if(htmlBody == null){
+            System.err.println("No se pudo obtener el contenido de la URL base");
+        }
+
+        Document doc = Jsoup.parse(htmlBody, urlAtlanticOcean2025);
+        Elements monthLinks = doc.select("a[href~=^\\d{2}/$]");
+        return monthLinks;
+    }
+
+    // Devuelve el cuerpo de la petición HTML, método base
+    private String getHTMLContent(String url){
         HttpRequest request = HttpRequest.newBuilder()
         .uri(URI.create(url))
         .GET()
@@ -74,9 +88,13 @@ public class ARGOHttpRequest {
         }
     }
 
-    public static void main(String[] args){
-        ARGOHttpRequest request = new ARGOHttpRequest();
-        request.createFolders();
+    private <T> HttpResponse baseRequestHandler(HttpRequest request, HttpResponse.BodyHandler<T> handler){
+        return null;
+    }
 
+    public static void main(String[] args){
+        ARGOHttpHandler request = new ARGOHttpHandler();
+        request.createFolders();
+        request.ncdfDownloader();
     }
 }
