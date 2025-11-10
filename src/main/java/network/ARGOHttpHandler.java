@@ -50,12 +50,12 @@ public class ARGOHttpHandler {
         Elements monthLinks = parseMainDirectory();
         for(Element monthLink : monthLinks){
             String monthFullURL = urlAtlanticOcean2025 + monthLink.attr("href");
-
+            System.out.println();
         }
     }
 
     private Elements parseMainDirectory(){
-        String htmlBody = getHTMLContent(urlAtlanticOcean2025);
+        String htmlBody = getHTMLURLBody(urlAtlanticOcean2025);
         if(htmlBody == null){
             System.err.println("No se pudo obtener el contenido de la URL base");
         }
@@ -65,36 +65,34 @@ public class ARGOHttpHandler {
         return monthLinks;
     }
 
-    // Devuelve el cuerpo de la petición HTML, método base
-    private String getHTMLContent(String url){
+    // Devuelve como String el cuerpo de la petición HTML
+    private String getHTMLURLBody(String url){
+        HttpResponse<String> response = baseRequestHandler(url, HttpResponse.BodyHandlers.ofString());
+        if(response.body() == null){
+            return null;
+        }
+        return response.body();
+    }
+    
+    // Maneja requests tipo String (para directorios) y tipo File (para los archivos .nc)
+    private <T> HttpResponse baseRequestHandler(String url, HttpResponse.BodyHandler<T> handler){
         HttpRequest request = HttpRequest.newBuilder()
         .uri(URI.create(url))
         .GET()
         .build();
 
-        try{
-            HttpResponse<String> response = defaultClient.send(request, HttpResponse.BodyHandlers.ofString());
-            
+        try { 
+            HttpResponse<T> response = defaultClient.send(request, handler);
             if(response.statusCode() >= 200 && response.statusCode() < 300){
-                return response.body();
+                return response;
             } else {
                 System.err.println("La solicitud falló con el código de estado: " + response.statusCode());
                 return null;
             }
-        } catch (IOException | InterruptedException e) {
-            // La solicitud no pudo completarse (timeout, no hay internet, error de DNS)
-            System.err.println("Error al enviar la solicitud " + e.getMessage());
-            return null;
+            
+        } catch (IOException | InterruptedException e){
+                System.err.println("Error al enviar la solicitud " + e.getMessage());
+                return null;
         }
-    }
-
-    private <T> HttpResponse baseRequestHandler(HttpRequest request, HttpResponse.BodyHandler<T> handler){
-        return null;
-    }
-
-    public static void main(String[] args){
-        ARGOHttpHandler request = new ARGOHttpHandler();
-        request.createFolders();
-        request.ncdfDownloader();
     }
 }
