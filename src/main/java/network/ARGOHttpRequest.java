@@ -38,8 +38,6 @@ public class ARGOHttpRequest {
         System.out.println(monthLinks.size());
         for(Element monthLink : monthLinks){
             String monthHref = monthLink.attr("href");
-            String monthUrl = urlAtlanticOcean2025 + monthHref;
-
             String monthDirName = monthHref.replace("/", "");
 
             Path monthDir = this.downloadDir.resolve(monthDirName);
@@ -49,7 +47,6 @@ public class ARGOHttpRequest {
 
             } catch (IOException e) {
                 System.err.println("Error al crear la carpeta: " + monthDir.toAbsolutePath());
-                e.printStackTrace();
             }
         }
     }
